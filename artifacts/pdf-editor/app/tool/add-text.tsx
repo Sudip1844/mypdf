@@ -15,20 +15,15 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useFiles } from "@/context/FilesContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { addTextToPdf, downloadPdf, fetchAsArrayBuffer, formatBytes } from "@/utils/pdfUtils";
-
-const TEXT_COLORS = [
-  { label: "কালো", color: [0, 0, 0] as [number, number, number], hex: "#000000" },
-  { label: "লাল", color: [0.9, 0.1, 0.1] as [number, number, number], hex: "#E53935" },
-  { label: "নীল", color: [0.1, 0.2, 0.8] as [number, number, number], hex: "#1565C0" },
-  { label: "সবুজ", color: [0.1, 0.5, 0.1] as [number, number, number], hex: "#2E7D32" },
-];
 
 export default function AddTextScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addFile } = useFiles();
+  const { t } = useLanguage();
   const [pickedFile, setPickedFile] = useState<{ name: string; uri: string } | null>(null);
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState("16");
@@ -39,6 +34,13 @@ export default function AddTextScreen() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
+  const TEXT_COLORS = [
+    { label: t.colorBlack, color: [0, 0, 0] as [number, number, number], hex: "#000000" },
+    { label: t.colorRed,   color: [0.9, 0.1, 0.1] as [number, number, number], hex: "#E53935" },
+    { label: t.colorBlue,  color: [0.1, 0.2, 0.8] as [number, number, number], hex: "#1565C0" },
+    { label: t.colorGreen, color: [0.1, 0.5, 0.1] as [number, number, number], hex: "#2E7D32" },
+  ];
+
   const pickFile = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf", copyToCacheDirectory: true });
     if (!result.canceled && result.assets[0]) {
@@ -48,29 +50,28 @@ export default function AddTextScreen() {
   };
 
   const apply = async () => {
-    if (!pickedFile || !text.trim()) { Alert.alert("", "PDF এবং টেক্সট দুটোই দিন।"); return; }
+    if (!pickedFile || !text.trim()) { Alert.alert("", t.needPdfAndText); return; }
     setLoading(true);
     try {
       const buf = await fetchAsArrayBuffer(pickedFile.uri);
-      const bytes = await addTextToPdf(
-        buf,
-        text,
-        parseInt(pageNum) - 1 || 0,
-        parseFloat(posX) || 72,
-        parseFloat(posY) || 720,
-        parseInt(fontSize) || 16,
-        TEXT_COLORS[selectedColor].color
-      );
+      const bytes = await addTextToPdf(buf, text, parseInt(pageNum) - 1 || 0, parseFloat(posX) || 72, parseFloat(posY) || 720, parseInt(fontSize) || 16, TEXT_COLORS[selectedColor].color);
       const outName = pickedFile.name.replace(".pdf", "") + "_edited.pdf";
       downloadPdf(bytes, outName);
       addFile({ name: outName, size: formatBytes(bytes.length), pages: 1, date: new Date().toLocaleDateString(), isFavorite: false, color: "#00796B" });
       setDone(true);
     } catch (e: any) {
-      Alert.alert("ত্রুটি", e.message);
+      Alert.alert(t.error, t.textAddError + e.message);
     } finally {
       setLoading(false);
     }
   };
+
+  const POS_FIELDS = [
+    { label: t.pageNum, val: pageNum, set: setPageNum },
+    { label: t.xPos, val: posX, set: setPosX },
+    { label: t.yPos, val: posY, set: setPosY },
+    { label: t.fontSize, val: fontSize, set: setFontSize },
+  ];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -78,34 +79,37 @@ export default function AddTextScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Add Text</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.addText}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {done ? (
           <View style={styles.successBox}>
             <MaterialCommunityIcons name="check-circle" size={64} color="#00796B" />
-            <Text style={[styles.successTitle, { color: colors.foreground }]}>টেক্সট যোগ হয়েছে!</Text>
+            <Text style={[styles.successTitle, { color: colors.foreground }]}>{t.textAdded}</Text>
             <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => { setDone(false); setPickedFile(null); setText(""); }}>
-              <Text style={styles.btnText}>আবার করুন</Text>
+              <Text style={styles.btnText}>{t.tryAgain}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <TouchableOpacity style={[styles.dropZone, { borderColor: pickedFile ? "#00796B" : colors.border, backgroundColor: colors.card }]} onPress={pickFile}>
+            <TouchableOpacity
+              style={[styles.dropZone, { borderColor: pickedFile ? "#00796B" : colors.border, backgroundColor: colors.card }]}
+              onPress={pickFile}
+            >
               <MaterialCommunityIcons name={pickedFile ? "file-check-outline" : "file-upload-outline"} size={40} color={pickedFile ? "#00796B" : colors.mutedForeground} />
               <Text style={[styles.dropText, { color: pickedFile ? colors.foreground : colors.mutedForeground }]}>
-                {pickedFile ? pickedFile.name : "PDF বেছে নিন"}
+                {pickedFile ? pickedFile.name : t.pickPdf}
               </Text>
             </TouchableOpacity>
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>টেক্সট লিখুন</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.typeText}</Text>
               <TextInput
                 style={[styles.textArea, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
                 value={text}
                 onChangeText={setText}
-                placeholder="এখানে লিখুন..."
+                placeholder={t.typeHere}
                 placeholderTextColor={colors.mutedForeground}
                 multiline
                 numberOfLines={4}
@@ -113,7 +117,7 @@ export default function AddTextScreen() {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>রঙ বেছে নিন</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.pickColor}</Text>
               <View style={styles.colorRow}>
                 {TEXT_COLORS.map((c, i) => (
                   <TouchableOpacity
@@ -126,14 +130,9 @@ export default function AddTextScreen() {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>পজিশন সেটিংস</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.positionSettings}</Text>
               <View style={styles.posRow}>
-                {[
-                  { label: "পেজ নং", val: pageNum, set: setPageNum },
-                  { label: "X পজিশন", val: posX, set: setPosX },
-                  { label: "Y পজিশন", val: posY, set: setPosY },
-                  { label: "ফন্ট সাইজ", val: fontSize, set: setFontSize },
-                ].map((item) => (
+                {POS_FIELDS.map((item) => (
                   <View key={item.label} style={styles.posItem}>
                     <Text style={[styles.posLabel, { color: colors.mutedForeground }]}>{item.label}</Text>
                     <TextInput
@@ -155,7 +154,7 @@ export default function AddTextScreen() {
               {loading ? <ActivityIndicator color="#fff" /> : (
                 <>
                   <MaterialCommunityIcons name="format-text" size={22} color="#fff" />
-                  <Text style={styles.applyBtnText}>টেক্সট যোগ করুন</Text>
+                  <Text style={styles.applyBtnText}>{t.addTextBtn}</Text>
                 </>
               )}
             </TouchableOpacity>

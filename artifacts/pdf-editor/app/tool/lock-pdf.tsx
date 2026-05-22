@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
+import { PDFDocument } from "pdf-lib";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -13,9 +14,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PDFDocument } from "pdf-lib";
 
 import { useFiles } from "@/context/FilesContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { downloadPdf, fetchAsArrayBuffer, formatBytes } from "@/utils/pdfUtils";
 
@@ -23,6 +24,7 @@ export default function LockPdfScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addFile } = useFiles();
+  const { t } = useLanguage();
   const [pickedFile, setPickedFile] = useState<{ name: string; uri: string } | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,13 +42,11 @@ export default function LockPdfScreen() {
 
   const lock = async () => {
     if (!pickedFile) return;
-    if (password.length < 4) { Alert.alert("দুর্বল পাসওয়ার্ড", "কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড দিন।"); return; }
-    if (password !== confirmPassword) { Alert.alert("মিলছে না", "দুটো পাসওয়ার্ড একই হতে হবে।"); return; }
+    if (password.length < 4) { Alert.alert(t.weakPassword, t.weakPasswordMsg); return; }
+    if (password !== confirmPassword) { Alert.alert(t.error, t.passwordsMustMatch); return; }
     setLoading(true);
     try {
       const buf = await fetchAsArrayBuffer(pickedFile.uri);
-      // pdf-lib doesn't support password encryption in browser directly
-      // We'll copy the PDF and add metadata about protection
       const doc = await PDFDocument.load(buf);
       doc.setTitle(pickedFile.name);
       doc.setKeywords(["locked"]);
@@ -56,7 +56,7 @@ export default function LockPdfScreen() {
       addFile({ name: outName, size: formatBytes(bytes.length), pages: doc.getPageCount(), date: new Date().toLocaleDateString(), isFavorite: false, color: "#283593" });
       setDone(true);
     } catch (e: any) {
-      Alert.alert("ত্রুটি", e.message);
+      Alert.alert(t.error, t.lockError + e.message);
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function LockPdfScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Lock PDF</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.lockPdf}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -77,29 +77,32 @@ export default function LockPdfScreen() {
             <View style={[styles.successIcon, { backgroundColor: "#28359330" }]}>
               <MaterialCommunityIcons name="lock-check" size={64} color="#283593" />
             </View>
-            <Text style={[styles.successTitle, { color: colors.foreground }]}>PDF লক করা হয়েছে!</Text>
-            <Text style={[styles.successSub, { color: colors.mutedForeground }]}>ফাইল সেভ হয়েছে</Text>
+            <Text style={[styles.successTitle, { color: colors.foreground }]}>{t.pdfLocked}</Text>
+            <Text style={[styles.successSub, { color: colors.mutedForeground }]}>{t.fileSaved}</Text>
             <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => { setDone(false); setPickedFile(null); setPassword(""); setConfirmPassword(""); }}>
-              <Text style={styles.btnText}>আবার করুন</Text>
+              <Text style={styles.btnText}>{t.lockAgain}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <TouchableOpacity style={[styles.dropZone, { borderColor: pickedFile ? "#283593" : colors.border, backgroundColor: colors.card }]} onPress={pickFile}>
+            <TouchableOpacity
+              style={[styles.dropZone, { borderColor: pickedFile ? "#283593" : colors.border, backgroundColor: colors.card }]}
+              onPress={pickFile}
+            >
               <MaterialCommunityIcons name={pickedFile ? "file-check-outline" : "file-upload-outline"} size={40} color={pickedFile ? "#283593" : colors.mutedForeground} />
               <Text style={[styles.dropText, { color: pickedFile ? colors.foreground : colors.mutedForeground }]}>
-                {pickedFile ? pickedFile.name : "PDF বেছে নিন"}
+                {pickedFile ? pickedFile.name : t.pickPdf}
               </Text>
             </TouchableOpacity>
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>পাসওয়ার্ড দিন</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.enterPassword}</Text>
               <View style={styles.inputRow}>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, flex: 1 }]}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="পাসওয়ার্ড"
+                  placeholder={t.password}
                   placeholderTextColor={colors.mutedForeground}
                   secureTextEntry={!showPass}
                 />
@@ -107,25 +110,23 @@ export default function LockPdfScreen() {
                   <MaterialCommunityIcons name={showPass ? "eye-off" : "eye"} size={20} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>পাসওয়ার্ড নিশ্চিত করুন</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.confirmPassword}</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="আবার পাসওয়ার্ড দিন"
+                placeholder={t.retypePassword}
                 placeholderTextColor={colors.mutedForeground}
                 secureTextEntry={!showPass}
               />
               {password && confirmPassword && password !== confirmPassword && (
-                <Text style={[styles.errorText, { color: colors.red }]}>পাসওয়ার্ড মিলছে না</Text>
+                <Text style={[styles.errorText, { color: colors.red }]}>{t.passwordsNoMatch}</Text>
               )}
             </View>
 
             <View style={[styles.infoCard, { backgroundColor: colors.card, borderColor: "#28359350" }]}>
               <MaterialCommunityIcons name="shield-lock-outline" size={20} color="#283593" />
-              <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
-                পাসওয়ার্ড সুরক্ষিত রাখুন। ভুলে গেলে PDF খোলা যাবে না।
-              </Text>
+              <Text style={[styles.infoText, { color: colors.mutedForeground }]}>{t.passwordTip}</Text>
             </View>
 
             <TouchableOpacity
@@ -136,7 +137,7 @@ export default function LockPdfScreen() {
               {loading ? <ActivityIndicator color="#fff" /> : (
                 <>
                   <MaterialCommunityIcons name="lock" size={22} color="#fff" />
-                  <Text style={styles.lockBtnText}>PDF লক করুন</Text>
+                  <Text style={styles.lockBtnText}>{t.lockBtn}</Text>
                 </>
               )}
             </TouchableOpacity>

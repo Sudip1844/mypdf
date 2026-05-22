@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Slider,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useFiles } from "@/context/FilesContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { addWatermarkToPdf, downloadPdf, fetchAsArrayBuffer, formatBytes } from "@/utils/pdfUtils";
 
@@ -23,6 +23,7 @@ export default function WatermarkScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addFile } = useFiles();
+  const { t } = useLanguage();
   const [pickedFile, setPickedFile] = useState<{ name: string; uri: string; size: number } | null>(null);
   const [watermarkText, setWatermarkText] = useState("CONFIDENTIAL");
   const [opacity, setOpacity] = useState(0.3);
@@ -45,17 +46,10 @@ export default function WatermarkScreen() {
       const bytes = await addWatermarkToPdf(buf, watermarkText, opacity);
       const outName = pickedFile.name.replace(".pdf", "") + "_watermarked.pdf";
       downloadPdf(bytes, outName);
-      addFile({
-        name: outName,
-        size: formatBytes(bytes.length),
-        pages: 1,
-        date: new Date().toLocaleDateString(),
-        isFavorite: false,
-        color: "#6A1B9A",
-      });
+      addFile({ name: outName, size: formatBytes(bytes.length), pages: 1, date: new Date().toLocaleDateString(), isFavorite: false, color: "#6A1B9A" });
       setDone(true);
     } catch (e: any) {
-      Alert.alert("ত্রুটি", e.message);
+      Alert.alert(t.error, t.watermarkError + e.message);
     } finally {
       setLoading(false);
     }
@@ -67,29 +61,32 @@ export default function WatermarkScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Watermark</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.watermark}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {done ? (
           <View style={styles.successBox}>
             <MaterialCommunityIcons name="check-circle" size={64} color="#6A1B9A" />
-            <Text style={[styles.successTitle, { color: colors.foreground }]}>Watermark যোগ হয়েছে!</Text>
+            <Text style={[styles.successTitle, { color: colors.foreground }]}>{t.watermarkDone}</Text>
             <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => { setDone(false); setPickedFile(null); }}>
-              <Text style={styles.btnText}>আবার করুন</Text>
+              <Text style={styles.btnText}>{t.tryAgain}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <TouchableOpacity style={[styles.dropZone, { borderColor: pickedFile ? "#6A1B9A" : colors.border, backgroundColor: colors.card }]} onPress={pickFile}>
+            <TouchableOpacity
+              style={[styles.dropZone, { borderColor: pickedFile ? "#6A1B9A" : colors.border, backgroundColor: colors.card }]}
+              onPress={pickFile}
+            >
               <MaterialCommunityIcons name={pickedFile ? "file-check-outline" : "file-upload-outline"} size={40} color={pickedFile ? "#6A1B9A" : colors.mutedForeground} />
               <Text style={[styles.dropText, { color: pickedFile ? colors.foreground : colors.mutedForeground }]}>
-                {pickedFile ? pickedFile.name : "PDF বেছে নিন"}
+                {pickedFile ? pickedFile.name : t.pickPdf}
               </Text>
             </TouchableOpacity>
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>Watermark টেক্সট</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.watermarkText}</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
                 value={watermarkText}
@@ -101,10 +98,10 @@ export default function WatermarkScreen() {
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={[styles.label, { color: colors.mutedForeground }]}>
-                স্বচ্ছতা: {Math.round(opacity * 100)}%
+                {t.opacity}: {Math.round(opacity * 100)}%
               </Text>
               <View style={styles.sliderRow}>
-                <Text style={[styles.sliderEnd, { color: colors.mutedForeground }]}>হালকা</Text>
+                <Text style={[styles.sliderEnd, { color: colors.mutedForeground }]}>{t.light}</Text>
                 <View style={styles.sliderTrack}>
                   {[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7].map((v) => (
                     <TouchableOpacity
@@ -114,7 +111,7 @@ export default function WatermarkScreen() {
                     />
                   ))}
                 </View>
-                <Text style={[styles.sliderEnd, { color: colors.mutedForeground }]}>গাঢ়</Text>
+                <Text style={[styles.sliderEnd, { color: colors.mutedForeground }]}>{t.dark}</Text>
               </View>
             </View>
 
@@ -126,7 +123,7 @@ export default function WatermarkScreen() {
               {loading ? <ActivityIndicator color="#fff" /> : (
                 <>
                   <MaterialCommunityIcons name="watermark" size={22} color="#fff" />
-                  <Text style={styles.applyBtnText}>Watermark যোগ করুন</Text>
+                  <Text style={styles.applyBtnText}>{t.addWatermarkBtn}</Text>
                 </>
               )}
             </TouchableOpacity>

@@ -5,29 +5,27 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useFiles } from "@/context/FilesContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useColors } from "@/hooks/useColors";
 import { downloadPdf, fetchAsArrayBuffer, formatBytes, mergePdfs } from "@/utils/pdfUtils";
 
-interface PickedPdf {
-  name: string;
-  uri: string;
-  size: number;
-}
+interface PickedPdf { name: string; uri: string; size: number; }
 
 export default function MergePdfScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addFile } = useFiles();
+  const { t } = useLanguage();
   const [pdfs, setPdfs] = useState<PickedPdf[]>([]);
   const [loading, setLoading] = useState(false);
   const [outputName, setOutputName] = useState("Merged_Document");
@@ -36,33 +34,20 @@ export default function MergePdfScreen() {
 
   const pickPdf = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "application/pdf",
-        multiple: true,
-        copyToCacheDirectory: true,
-      });
+      const result = await DocumentPicker.getDocumentAsync({ type: "application/pdf", multiple: true, copyToCacheDirectory: true });
       if (!result.canceled) {
-        const newPdfs = result.assets.map((a) => ({
-          name: a.name,
-          uri: a.uri,
-          size: a.size ?? 0,
-        }));
+        const newPdfs = result.assets.map((a) => ({ name: a.name, uri: a.uri, size: a.size ?? 0 }));
         setPdfs((prev) => [...prev, ...newPdfs]);
       }
-    } catch (e) {
-      Alert.alert("ত্রুটি", "ফাইল বেছে নিতে সমস্যা হয়েছে।");
+    } catch {
+      Alert.alert(t.error, t.pickError);
     }
   };
 
-  const removePdf = (idx: number) => {
-    setPdfs((prev) => prev.filter((_, i) => i !== idx));
-  };
+  const removePdf = (idx: number) => setPdfs((prev) => prev.filter((_, i) => i !== idx));
 
   const merge = async () => {
-    if (pdfs.length < 2) {
-      Alert.alert("কম ফাইল", "মার্জ করতে কমপক্ষে ২টি PDF দরকার।");
-      return;
-    }
+    if (pdfs.length < 2) { Alert.alert(t.error, t.needTwoPdfs); return; }
     setLoading(true);
     try {
       const buffers = await Promise.all(pdfs.map((p) => fetchAsArrayBuffer(p.uri)));
@@ -70,17 +55,10 @@ export default function MergePdfScreen() {
       const size = formatBytes(bytes.length);
       setResultSize(size);
       downloadPdf(bytes, outputName + ".pdf");
-      addFile({
-        name: outputName + ".pdf",
-        size,
-        pages: pdfs.length * 3,
-        date: new Date().toLocaleDateString(),
-        isFavorite: false,
-        color: "#F57C00",
-      });
+      addFile({ name: outputName + ".pdf", size, pages: pdfs.length * 3, date: new Date().toLocaleDateString(), isFavorite: false, color: "#F57C00" });
       setDone(true);
     } catch (e: any) {
-      Alert.alert("ত্রুটি", "Merge করতে সমস্যা হয়েছে: " + e.message);
+      Alert.alert(t.error, t.mergeError + e.message);
     } finally {
       setLoading(false);
     }
@@ -88,16 +66,11 @@ export default function MergePdfScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.header,
-          { backgroundColor: colors.background, paddingTop: insets.top + 12, borderBottomColor: colors.border },
-        ]}
-      >
+      <View style={[styles.header, { backgroundColor: colors.background, paddingTop: insets.top + 12, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Merge PDF</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.mergePdf}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -106,70 +79,48 @@ export default function MergePdfScreen() {
             <View style={[styles.successIcon, { backgroundColor: "#F57C0030" }]}>
               <MaterialCommunityIcons name="check-circle" size={64} color="#F57C00" />
             </View>
-            <Text style={[styles.successTitle, { color: colors.foreground }]}>Merge সম্পন্ন!</Text>
-            <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
-              {outputName}.pdf · {resultSize}
-            </Text>
-            <TouchableOpacity
-              style={[styles.btn, { backgroundColor: colors.primary }]}
-              onPress={() => { setDone(false); setPdfs([]); setOutputName("Merged_Document"); }}
-            >
-              <Text style={styles.btnText}>আবার করুন</Text>
+            <Text style={[styles.successTitle, { color: colors.foreground }]}>{t.mergeDone}</Text>
+            <Text style={[styles.successSub, { color: colors.mutedForeground }]}>{outputName}.pdf · {resultSize}</Text>
+            <TouchableOpacity style={[styles.btn, { backgroundColor: colors.primary }]} onPress={() => { setDone(false); setPdfs([]); setOutputName("Merged_Document"); }}>
+              <Text style={styles.btnText}>{t.mergeAgain}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.label, { color: colors.mutedForeground }]}>আউটপুট ফাইলের নাম</Text>
+              <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.outputFileName}</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
                 value={outputName}
                 onChangeText={setOutputName}
-                placeholder="ফাইলের নাম"
+                placeholder={t.fileName}
                 placeholderTextColor={colors.mutedForeground}
               />
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <View style={styles.rowHeader}>
-                <Text style={[styles.label, { color: colors.mutedForeground }]}>
-                  PDF ফাইলসমূহ ({pdfs.length} টি)
-                </Text>
-                <TouchableOpacity
-                  style={[styles.addBtn, { backgroundColor: colors.primary }]}
-                  onPress={pickPdf}
-                >
+                <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.pdfFiles} ({pdfs.length})</Text>
+                <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={pickPdf}>
                   <MaterialCommunityIcons name="plus" size={16} color="#fff" />
-                  <Text style={styles.addBtnText}>PDF যোগ করুন</Text>
+                  <Text style={styles.addBtnText}>{t.addPdf}</Text>
                 </TouchableOpacity>
               </View>
 
               {pdfs.length === 0 ? (
-                <TouchableOpacity
-                  style={[styles.dropZone, { borderColor: colors.border }]}
-                  onPress={pickPdf}
-                >
+                <TouchableOpacity style={[styles.dropZone, { borderColor: colors.border }]} onPress={pickPdf}>
                   <MaterialCommunityIcons name="file-pdf-box" size={48} color={colors.mutedForeground} />
-                  <Text style={[styles.dropText, { color: colors.mutedForeground }]}>
-                    PDF ফাইল বেছে নিন
-                  </Text>
+                  <Text style={[styles.dropText, { color: colors.mutedForeground }]}>{t.pickPdfFiles}</Text>
                 </TouchableOpacity>
               ) : (
                 pdfs.map((pdf, i) => (
-                  <View
-                    key={i}
-                    style={[styles.pdfRow, { backgroundColor: colors.secondary }]}
-                  >
+                  <View key={i} style={[styles.pdfRow, { backgroundColor: colors.secondary }]}>
                     <View style={[styles.pdfIcon, { backgroundColor: "#E5393530" }]}>
                       <MaterialCommunityIcons name="file-pdf-box" size={28} color="#E53935" />
                     </View>
                     <View style={styles.pdfInfo}>
-                      <Text style={[styles.pdfName, { color: colors.foreground }]} numberOfLines={1}>
-                        {pdf.name}
-                      </Text>
-                      <Text style={[styles.pdfSize, { color: colors.mutedForeground }]}>
-                        {formatBytes(pdf.size)}
-                      </Text>
+                      <Text style={[styles.pdfName, { color: colors.foreground }]} numberOfLines={1}>{pdf.name}</Text>
+                      <Text style={[styles.pdfSize, { color: colors.mutedForeground }]}>{formatBytes(pdf.size)}</Text>
                     </View>
                     <TouchableOpacity onPress={() => removePdf(i)}>
                       <MaterialCommunityIcons name="close" size={20} color={colors.mutedForeground} />
@@ -182,9 +133,7 @@ export default function MergePdfScreen() {
             {pdfs.length >= 2 && (
               <View style={[styles.infoBox, { backgroundColor: colors.card, borderColor: colors.primary }]}>
                 <MaterialCommunityIcons name="information-outline" size={18} color={colors.primary} />
-                <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
-                  {pdfs.length}টি PDF মার্জ হবে উপরের ক্রম অনুযায়ী
-                </Text>
+                <Text style={[styles.infoText, { color: colors.mutedForeground }]}>{t.willMergeIn}</Text>
               </View>
             )}
 
@@ -193,12 +142,10 @@ export default function MergePdfScreen() {
               onPress={merge}
               disabled={loading || pdfs.length < 2}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
+              {loading ? <ActivityIndicator color="#fff" /> : (
                 <>
                   <MaterialCommunityIcons name="call-merge" size={22} color="#fff" />
-                  <Text style={styles.mergeBtnText}>Merge করুন</Text>
+                  <Text style={styles.mergeBtnText}>{t.mergePdfBtn}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -211,14 +158,7 @@ export default function MergePdfScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
-  },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 12 },
   backBtn: { padding: 4 },
   headerTitle: { fontSize: 20, fontFamily: "Inter_600SemiBold" },
   scroll: { padding: 16, gap: 16, paddingBottom: 60 },
