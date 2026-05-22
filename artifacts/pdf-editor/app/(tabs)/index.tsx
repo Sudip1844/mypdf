@@ -2,14 +2,12 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -40,7 +38,7 @@ const QUICK_TOOLS = [
     icon: "archive-arrow-down-outline" as const,
     label: "Compress",
     iconColor: "#fff",
-    bg: "#E53935",
+    bg: "#C62828",
   },
   {
     id: "pdf-to-jpg",
@@ -83,8 +81,6 @@ const SCAN_TYPES = [
 
 export default function HomeScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const isWeb = Platform.OS === "web";
 
   const handleToolPress = (id: string) => {
     if (id === "more") {
@@ -95,17 +91,11 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={[styles.scroll, { backgroundColor: colors.background }]}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: isWeb ? insets.top + 60 : 8,
-          paddingBottom: isWeb ? 120 : 100,
-        },
-      ]}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.grid}>
-        {QUICK_TOOLS.map((tool, i) => (
+        {QUICK_TOOLS.map((tool) => (
           <View key={tool.id} style={styles.gridCell}>
             <TouchableOpacity
               style={[styles.toolBtn, { backgroundColor: colors.card }]}
@@ -138,14 +128,21 @@ export default function HomeScreen() {
               style={styles.scanItem}
               activeOpacity={0.7}
             >
-              <View style={[styles.scanIconWrap, { backgroundColor: colors.secondary }]}>
+              <View
+                style={[
+                  styles.scanIconWrap,
+                  { backgroundColor: colors.secondary },
+                ]}
+              >
                 <MaterialCommunityIcons
                   name={item.icon}
                   size={28}
                   color={colors.mutedForeground}
                 />
               </View>
-              <Text style={[styles.scanLabel, { color: colors.mutedForeground }]}>
+              <Text
+                style={[styles.scanLabel, { color: colors.mutedForeground }]}
+              >
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -162,12 +159,14 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 110,
     gap: 16,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 10,
   },
   gridCell: {
     width: "22%",
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     gap: 8,
   },
   toolIconWrap: {

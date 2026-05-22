@@ -2,15 +2,12 @@ import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   FlatList,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FileItem } from "@/components/FileItem";
 import { useFiles, type PdfFile } from "@/context/FilesContext";
@@ -20,12 +17,10 @@ type Tab = "all" | "recent" | "favorites";
 
 export default function FilesScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const { files, recentFiles, favoriteFiles } = useFiles();
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
-  const isWeb = Platform.OS === "web";
 
   const getDisplayFiles = (): PdfFile[] => {
     let base: PdfFile[];
@@ -45,13 +40,7 @@ export default function FilesScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {searchVisible && (
         <View
-          style={[
-            styles.searchBar,
-            {
-              backgroundColor: colors.card,
-              marginTop: isWeb ? insets.top + 60 : 8,
-            },
-          ]}
+          style={[styles.searchBar, { backgroundColor: colors.card }]}
         >
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
@@ -73,47 +62,68 @@ export default function FilesScreen() {
         </View>
       )}
 
-      <View
-        style={[
-          styles.tabsRow,
-          { marginTop: !searchVisible && isWeb ? insets.top + 60 : searchVisible ? 8 : 8 },
-        ]}
-      >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.tabs}>
-            {(["all", "recent", "favorites"] as Tab[]).map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                style={[
-                  styles.tab,
-                  activeTab === tab && {
-                    backgroundColor: colors.primary,
-                  },
-                  activeTab !== tab && {
-                    backgroundColor: colors.card,
-                  },
-                ]}
-                onPress={() => setActiveTab(tab)}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    {
-                      color:
-                        activeTab === tab ? "#fff" : colors.mutedForeground,
-                    },
-                  ]}
-                >
-                  {tab === "all"
-                    ? "All Files"
-                    : tab === "recent"
-                    ? "Recent"
-                    : "Favorites"}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+      <View style={styles.tabsRow}>
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === "all"
+              ? { backgroundColor: colors.primary }
+              : { backgroundColor: colors.card },
+          ]}
+          onPress={() => setActiveTab("all")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === "all" ? "#fff" : colors.mutedForeground },
+            ]}
+          >
+            All Files
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === "recent"
+              ? { backgroundColor: colors.primary }
+              : { backgroundColor: colors.card },
+          ]}
+          onPress={() => setActiveTab("recent")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "recent" ? "#fff" : colors.mutedForeground,
+              },
+            ]}
+          >
+            Recent
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            activeTab === "favorites"
+              ? { backgroundColor: colors.primary }
+              : { backgroundColor: colors.card },
+          ]}
+          onPress={() => setActiveTab("favorites")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              {
+                color:
+                  activeTab === "favorites" ? "#fff" : colors.mutedForeground,
+              },
+            ]}
+          >
+            Favorites
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.filterBtn, { backgroundColor: colors.card }]}
           onPress={() => setSearchVisible(!searchVisible)}
@@ -131,10 +141,12 @@ export default function FilesScreen() {
           <MaterialCommunityIcons
             name="file-outline"
             size={64}
-            color={colors.muted}
+            color={colors.border}
           />
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            No files found
+            {activeTab === "favorites"
+              ? "কোনো ফেভারিট ফাইল নেই"
+              : "কোনো ফাইল পাওয়া যায়নি"}
           </Text>
         </View>
       ) : (
@@ -142,12 +154,8 @@ export default function FilesScreen() {
           data={displayFiles}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <FileItem file={item} />}
-          contentContainerStyle={[
-            styles.list,
-            { paddingBottom: isWeb ? 120 : 100 },
-          ]}
+          contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={!!displayFiles.length}
         />
       )}
     </View>
@@ -158,6 +166,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 12,
   },
   searchBar: {
     flexDirection: "row",
@@ -166,7 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   searchInput: {
     flex: 1,
@@ -177,11 +186,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 12,
-  },
-  tabs: {
-    flexDirection: "row",
-    gap: 8,
+    marginBottom: 14,
+    flexWrap: "wrap",
   },
   tab: {
     paddingHorizontal: 16,
@@ -198,9 +204,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    marginLeft: "auto",
   },
   list: {
-    paddingTop: 4,
+    paddingBottom: 110,
   },
   empty: {
     flex: 1,

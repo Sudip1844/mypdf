@@ -16,33 +16,136 @@ interface Tool {
   id: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
+  iconColor: string;
   bg: string;
 }
 
 const CONVERT_TOOLS: Tool[] = [
-  { id: "img-pdf", icon: "file-image-outline", label: "Image to PDF", bg: "#E53935" },
-  { id: "docx-pdf", icon: "file-word-outline", label: "Docx to PDF", bg: "#1565C0" },
-  { id: "ppt-pdf", icon: "file-powerpoint-outline", label: "PPT to PDF", bg: "#F57C00" },
-  { id: "pdf-jpg", icon: "file-jpg-box", label: "PDF to JPG", bg: "#E53935" },
-  { id: "pdf-word", icon: "file-word-box-outline", label: "PDF to Word", bg: "#1565C0" },
-  { id: "pdf-ppt", icon: "file-powerpoint-box-outline", label: "PDF to PPT", bg: "#F57C00" },
+  {
+    id: "img-pdf",
+    icon: "file-image-outline",
+    label: "Image to PDF",
+    iconColor: "#fff",
+    bg: "#E53935",
+  },
+  {
+    id: "docx-pdf",
+    icon: "file-word-outline",
+    label: "Docx to PDF",
+    iconColor: "#fff",
+    bg: "#1565C0",
+  },
+  {
+    id: "ppt-pdf",
+    icon: "file-powerpoint-outline",
+    label: "PPT to PDF",
+    iconColor: "#fff",
+    bg: "#F57C00",
+  },
+  {
+    id: "pdf-jpg",
+    icon: "file-jpg-box",
+    label: "PDF to JPG",
+    iconColor: "#fff",
+    bg: "#E53935",
+  },
+  {
+    id: "pdf-word",
+    icon: "file-word-box-outline",
+    label: "PDF to Word",
+    iconColor: "#fff",
+    bg: "#1565C0",
+  },
+  {
+    id: "pdf-ppt",
+    icon: "file-powerpoint-box-outline",
+    label: "PDF to PPT",
+    iconColor: "#fff",
+    bg: "#F57C00",
+  },
 ];
 
 const POPULAR_TOOLS: Tool[] = [
-  { id: "scan", icon: "scan-helper", label: "Smart Scan", bg: "#1565C0" },
-  { id: "scan-id", icon: "card-account-details-outline", label: "Scan ID Card", bg: "#00796B" },
-  { id: "import", icon: "folder-outline", label: "Import PDF", bg: "#F57C00" },
-  { id: "print", icon: "printer-outline", label: "Print PDF", bg: "#1565C0" },
+  {
+    id: "scan",
+    icon: "scan-helper",
+    label: "Smart Scan",
+    iconColor: "#fff",
+    bg: "#1565C0",
+  },
+  {
+    id: "scan-id",
+    icon: "card-account-details-outline",
+    label: "Scan ID Card",
+    iconColor: "#fff",
+    bg: "#00796B",
+  },
+  {
+    id: "import",
+    icon: "folder-outline",
+    label: "Import PDF",
+    iconColor: "#fff",
+    bg: "#F57C00",
+  },
+  {
+    id: "print",
+    icon: "printer-outline",
+    label: "Print PDF",
+    iconColor: "#fff",
+    bg: "#1565C0",
+  },
 ];
 
 const EDIT_TOOLS: Tool[] = [
-  { id: "merge", icon: "call-merge", label: "Merge PDF", bg: "#F57C00" },
-  { id: "compress", icon: "archive-arrow-down-outline", label: "Compress", bg: "#E53935" },
-  { id: "doodle", icon: "pencil-outline", label: "Doodle", bg: "#6A1B9A" },
-  { id: "add-text", icon: "format-text", label: "Add Text", bg: "#00796B" },
-  { id: "signature", icon: "draw-pen", label: "Signature", bg: "#6A1B9A" },
-  { id: "lock", icon: "lock-outline", label: "Lock PDF", bg: "#1565C0" },
-  { id: "unlock", icon: "lock-open-outline", label: "Unlock PDF", bg: "#1565C0" },
+  {
+    id: "merge",
+    icon: "call-merge",
+    label: "Merge PDF",
+    iconColor: "#fff",
+    bg: "#F57C00",
+  },
+  {
+    id: "compress",
+    icon: "archive-arrow-down-outline",
+    label: "Compress",
+    iconColor: "#fff",
+    bg: "#E53935",
+  },
+  {
+    id: "doodle",
+    icon: "pencil-outline",
+    label: "Doodle",
+    iconColor: "#fff",
+    bg: "#6A1B9A",
+  },
+  {
+    id: "add-text",
+    icon: "format-text",
+    label: "Add Text",
+    iconColor: "#fff",
+    bg: "#00796B",
+  },
+  {
+    id: "signature",
+    icon: "draw-pen",
+    label: "Signature",
+    iconColor: "#fff",
+    bg: "#6A1B9A",
+  },
+  {
+    id: "lock",
+    icon: "lock-outline",
+    label: "Lock PDF",
+    iconColor: "#fff",
+    bg: "#283593",
+  },
+  {
+    id: "unlock",
+    icon: "lock-open-outline",
+    label: "Unlock PDF",
+    iconColor: "#fff",
+    bg: "#283593",
+  },
 ];
 
 function ToolSection({ title, tools }: { title: string; tools: Tool[] }) {
@@ -57,32 +160,41 @@ function ToolSection({ title, tools }: { title: string; tools: Tool[] }) {
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
         {title}
       </Text>
-      {rows.map((row, ri) => (
-        <View key={ri} style={styles.row}>
-          {row.map((tool) => (
-            <TouchableOpacity
-              key={tool.id}
-              style={[styles.card, { backgroundColor: colors.card }]}
-              activeOpacity={0.75}
-            >
-              <View style={[styles.iconWrap, { backgroundColor: tool.bg + "22" }]}>
-                <MaterialCommunityIcons
-                  name={tool.icon}
-                  size={32}
-                  color={tool.bg}
-                />
-              </View>
-              <Text style={[styles.cardLabel, { color: colors.foreground }]}>
-                {tool.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          {row.length < 3 &&
-            Array.from({ length: 3 - row.length }).map((_, i) => (
-              <View key={`empty-${i}`} style={styles.cardPlaceholder} />
+      <View style={styles.sectionCards}>
+        {rows.map((row, ri) => (
+          <View key={ri} style={styles.row}>
+            {row.map((tool) => (
+              <TouchableOpacity
+                key={tool.id}
+                style={[styles.card, { backgroundColor: colors.card }]}
+                activeOpacity={0.75}
+              >
+                <View
+                  style={[
+                    styles.iconWrap,
+                    { backgroundColor: tool.bg + "33" },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={tool.icon}
+                    size={32}
+                    color={tool.bg}
+                  />
+                </View>
+                <Text
+                  style={[styles.cardLabel, { color: colors.foreground }]}
+                >
+                  {tool.label}
+                </Text>
+              </TouchableOpacity>
             ))}
-        </View>
-      ))}
+            {row.length < 3 &&
+              Array.from({ length: 3 - row.length }).map((_, i) => (
+                <View key={`empty-${i}`} style={styles.cardPlaceholder} />
+              ))}
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -116,14 +228,19 @@ export default function ToolsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: 40 }]}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity
           style={[styles.featureRequest, { backgroundColor: colors.card }]}
           activeOpacity={0.8}
         >
-          <View style={[styles.featureIcon, { backgroundColor: "#1565C0" + "33" }]}>
+          <View
+            style={[
+              styles.featureIcon,
+              { backgroundColor: "#1565C033" },
+            ]}
+          >
             <MaterialCommunityIcons
               name="message-plus-outline"
               size={24}
@@ -131,13 +248,22 @@ export default function ToolsScreen() {
             />
           </View>
           <View style={styles.featureText}>
-            <Text style={[styles.featureTitle, { color: colors.foreground }]}>
+            <Text
+              style={[styles.featureTitle, { color: colors.foreground }]}
+            >
               Request a new feature
             </Text>
-            <Text style={[styles.featureSub, { color: colors.mutedForeground }]}>
+            <Text
+              style={[styles.featureSub, { color: colors.mutedForeground }]}
+            >
               What other features do you want?
             </Text>
           </View>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={20}
+            color={colors.mutedForeground}
+          />
         </TouchableOpacity>
 
         <ToolSection title="Convert" tools={CONVERT_TOOLS} />
@@ -170,6 +296,7 @@ const styles = StyleSheet.create({
   scroll: {
     padding: 16,
     gap: 24,
+    paddingBottom: 60,
   },
   featureRequest: {
     flexDirection: "row",
@@ -177,7 +304,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     gap: 14,
-    marginBottom: 8,
   },
   featureIcon: {
     width: 44,
@@ -205,6 +331,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Inter_600SemiBold",
   },
+  sectionCards: {
+    gap: 10,
+  },
   row: {
     flexDirection: "row",
     gap: 10,
@@ -214,7 +343,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 20,
+    paddingVertical: 18,
     paddingHorizontal: 8,
     gap: 10,
     minHeight: 110,

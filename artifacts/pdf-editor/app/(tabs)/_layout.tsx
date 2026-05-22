@@ -12,14 +12,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 
-function CustomTabBar({ state, descriptors, navigation }: any) {
+function CustomTabBar({ state, navigation }: any) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const isWeb = Platform.OS === "web";
-
-  const tabs = state.routes.filter((r: any) => r.name !== "fab-placeholder");
-
-  const bottomPad = isWeb ? 34 : insets.bottom;
+  const bottomPad = Math.max(insets.bottom, Platform.OS === "web" ? 8 : 4);
 
   return (
     <View
@@ -29,7 +25,6 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
           paddingBottom: bottomPad,
-          height: 56 + bottomPad,
         },
       ]}
     >
@@ -41,9 +36,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
         <Feather
           name="home"
           size={22}
-          color={
-            state.index === 0 ? colors.primary : colors.mutedForeground
-          }
+          color={state.index === 0 ? colors.primary : colors.mutedForeground}
         />
         <Text
           style={[
@@ -76,9 +69,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
         <MaterialCommunityIcons
           name="file-document-multiple-outline"
           size={22}
-          color={
-            state.index === 1 ? colors.primary : colors.mutedForeground
-          }
+          color={state.index === 1 ? colors.primary : colors.mutedForeground}
         />
         <Text
           style={[
@@ -153,7 +144,9 @@ export default function TabLayout() {
                   color={colors.foreground}
                 />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push("/settings")}
+              >
                 <MaterialCommunityIcons
                   name="cog-outline"
                   size={22}
@@ -168,21 +161,18 @@ export default function TabLayout() {
   );
 }
 
-const filesHeaderIconsColors = {};
-
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    paddingTop: 8,
+    alignItems: "center",
+    paddingTop: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    position: "relative",
+    minHeight: 60,
   },
   tabItem: {
     flex: 1,
     alignItems: "center",
     gap: 3,
-    paddingTop: 2,
   },
   tabLabel: {
     fontSize: 11,
@@ -191,9 +181,8 @@ const styles = StyleSheet.create({
   fabWrap: {
     width: 80,
     alignItems: "center",
-    justifyContent: "flex-start",
-    paddingTop: 0,
-    marginTop: -28,
+    justifyContent: "center",
+    marginTop: -24,
   },
   fab: {
     width: 58,

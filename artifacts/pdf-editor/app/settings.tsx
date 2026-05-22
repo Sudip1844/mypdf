@@ -2,7 +2,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -22,6 +21,7 @@ interface SettingRowProps {
   toggleValue?: boolean;
   onToggle?: (v: boolean) => void;
   onPress?: () => void;
+  isLast?: boolean;
 }
 
 function SettingRow({
@@ -32,61 +32,66 @@ function SettingRow({
   toggleValue,
   onToggle,
   onPress,
+  isLast,
 }: SettingRowProps) {
   const colors = useColors();
   return (
-    <TouchableOpacity
-      style={styles.row}
-      onPress={onPress}
-      activeOpacity={toggle ? 1 : 0.7}
-    >
-      <MaterialCommunityIcons
-        name={icon}
-        size={20}
-        color={colors.mutedForeground}
-        style={{ width: 24 }}
-      />
-      <Text style={[styles.rowLabel, { color: colors.foreground }]}>
-        {label}
-      </Text>
-      {value && (
-        <View style={styles.valueRow}>
-          <Text style={[styles.valueText, { color: colors.primary }]}>
-            {value}
-          </Text>
-          <MaterialCommunityIcons
-            name="chevron-down"
-            size={16}
-            color={colors.primary}
+    <>
+      <TouchableOpacity
+        style={styles.row}
+        onPress={onPress}
+        activeOpacity={toggle ? 1 : 0.7}
+      >
+        <MaterialCommunityIcons
+          name={icon}
+          size={20}
+          color={colors.mutedForeground}
+          style={{ width: 24 }}
+        />
+        <Text style={[styles.rowLabel, { color: colors.foreground }]}>
+          {label}
+        </Text>
+        {value && (
+          <View style={styles.valueRow}>
+            <Text style={[styles.valueText, { color: colors.primary }]}>
+              {value}
+            </Text>
+            <MaterialCommunityIcons
+              name="chevron-down"
+              size={16}
+              color={colors.primary}
+            />
+          </View>
+        )}
+        {toggle && (
+          <Switch
+            value={toggleValue}
+            onValueChange={onToggle}
+            trackColor={{ false: "#374151", true: colors.primary }}
+            thumbColor="#fff"
+            ios_backgroundColor="#374151"
           />
-        </View>
-      )}
-      {toggle && (
-        <Switch
-          value={toggleValue}
-          onValueChange={onToggle}
-          trackColor={{ false: "#374151", true: colors.primary }}
-          thumbColor="#fff"
-          ios_backgroundColor="#374151"
+        )}
+        {!value && !toggle && (
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={18}
+            color={colors.mutedForeground}
+          />
+        )}
+      </TouchableOpacity>
+      {!isLast && (
+        <View
+          style={[styles.divider, { backgroundColor: colors.border }]}
         />
       )}
-    </TouchableOpacity>
-  );
-}
-
-function SettingCard({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
-      {children}
-    </View>
+    </>
   );
 }
 
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const isWeb = Platform.OS === "web";
   const [securityQ, setSecurityQ] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
 
@@ -97,7 +102,7 @@ export default function SettingsScreen() {
           styles.header,
           {
             backgroundColor: colors.background,
-            paddingTop: isWeb ? insets.top + 60 : insets.top + 12,
+            paddingTop: insets.top + 12,
             borderBottomColor: colors.border,
           },
         ]}
@@ -122,33 +127,25 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingBottom: isWeb ? 120 : 60 },
-        ]}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <SettingCard>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           <SettingRow
             icon="share-variant-outline"
             label="Share App"
             onPress={() => {}}
+            isLast
           />
-        </SettingCard>
+        </View>
 
-        <SettingCard>
-          <SettingRow
-            icon="cancel"
-            label="Remove Ads"
-            onPress={() => {}}
-          />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <SettingRow icon="cancel" label="Remove Ads" onPress={() => {}} />
           <SettingRow
             icon="crop-free"
             label="Scan Settings"
             onPress={() => {}}
           />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SettingRow
             icon="shield-check-outline"
             label="Security Question"
@@ -156,48 +153,45 @@ export default function SettingsScreen() {
             toggleValue={securityQ}
             onToggle={setSecurityQ}
           />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SettingRow
             icon="web"
             label="Language Options"
             value="Default"
             onPress={() => {}}
           />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SettingRow
             icon="weather-night"
             label="Dark Mode"
             toggle
             toggleValue={darkMode}
             onToggle={setDarkMode}
+            isLast
           />
-        </SettingCard>
+        </View>
 
-        <SettingCard>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           <SettingRow
             icon="chat-outline"
             label="Feedback"
             onPress={() => {}}
           />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SettingRow
             icon="send-outline"
             label="Request a new feature"
             onPress={() => {}}
           />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SettingRow
             icon="shield-outline"
             label="Privacy Policy"
             onPress={() => {}}
           />
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <SettingRow
             icon="information-outline"
             label="Version"
             value="1.0.0"
+            isLast
           />
-        </SettingCard>
+        </View>
       </ScrollView>
     </View>
   );
@@ -229,6 +223,7 @@ const styles = StyleSheet.create({
   scroll: {
     padding: 16,
     gap: 16,
+    paddingBottom: 60,
   },
   card: {
     borderRadius: 16,
