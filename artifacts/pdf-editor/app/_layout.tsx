@@ -49,11 +49,14 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
-
+  // Always render the full tree so expo-router mounts routes immediately.
+  // SplashScreen.preventAutoHideAsync() keeps the native splash visible while
+  // fonts load. On web, font loading is fast and the brief flash is invisible.
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
