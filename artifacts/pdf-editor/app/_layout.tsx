@@ -5,6 +5,8 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -41,7 +43,12 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  // Explicitly preload ALL icon fonts alongside Inter.
+  // Without this, Android renders wrong glyphs / emoji fallbacks
+  // because the font file isn't guaranteed to be available at first render.
   const [fontsLoaded, fontError] = useFonts({
+    ...MaterialCommunityIcons.font,
+    ...Feather.font,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
@@ -54,9 +61,6 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  // Always render the full tree so expo-router mounts routes immediately.
-  // SplashScreen.preventAutoHideAsync() keeps the native splash visible while
-  // fonts load. On web, font loading is fast and the brief flash is invisible.
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
