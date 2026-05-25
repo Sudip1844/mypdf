@@ -38,6 +38,7 @@ function RootLayoutNav() {
       <Stack.Screen name="tool" />
       <Stack.Screen name="tools" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="image-picker" />
     </Stack>
   );
 }

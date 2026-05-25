@@ -1,16 +1,14 @@
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FabActionSheet } from "@/components/FabActionSheet";
 import { useColors } from "@/hooks/useColors";
 
 function CustomTabBar({ state, navigation }: any) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [fabVisible, setFabVisible] = useState(false);
   const bottomPad = Math.max(insets.bottom, Platform.OS === "web" ? 8 : 4);
 
   return (
@@ -36,8 +34,8 @@ function CustomTabBar({ state, navigation }: any) {
           </Text>
         </TouchableOpacity>
 
-        {/* FAB — opens action sheet (not tools screen directly) */}
-        <TouchableOpacity style={styles.fabWrap} onPress={() => setFabVisible(true)} activeOpacity={0.85}>
+        {/* FAB — opens image picker */}
+        <TouchableOpacity style={styles.fabWrap} onPress={() => router.push("/image-picker")} activeOpacity={0.85}>
           <View style={[styles.fab, { backgroundColor: colors.primary }]}>
             <MaterialCommunityIcons name="plus" size={30} color="#fff" />
           </View>
@@ -59,7 +57,6 @@ function CustomTabBar({ state, navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <FabActionSheet visible={fabVisible} onClose={() => setFabVisible(false)} />
     </>
   );
 }

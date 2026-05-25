@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -32,12 +32,26 @@ export default function ImageToPdfScreen() {
   const insets = useSafeAreaInsets();
   const { addFile } = useFiles();
   const { t } = useLanguage();
+  const params = useLocalSearchParams<{ preselected?: string }>();
+
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [pdfName, setPdfName] = useState("My_Document");
   const [pageSize, setPageSize] = useState(0);
   const [done, setDone] = useState(false);
   const [resultSize, setResultSize] = useState("");
+
+  // Accept pre-selected images passed from the image picker
+  useEffect(() => {
+    if (params.preselected) {
+      try {
+        const uris: string[] = JSON.parse(params.preselected);
+        if (uris.length > 0) setImages(uris);
+      } catch {
+        // ignore parse error
+      }
+    }
+  }, [params.preselected]);
 
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -70,7 +84,14 @@ export default function ImageToPdfScreen() {
         name: filename,
         size,
         pages: images.length,
-        date: new Date().toLocaleDateString("en-GB", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(",", ""),
+        date: new Date()
+          .toLocaleDateString("en-GB", {
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(",", ""),
         isFavorite: false,
         color: "#E53935",
       });
@@ -84,11 +105,29 @@ export default function ImageToPdfScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.background, paddingTop: insets.top + 12, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.background,
+            paddingTop: insets.top + 12,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialCommunityIcons name="arrow-left" size={24} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.imageToPdf}</Text>
+        {images.length > 0 && (
+          <TouchableOpacity
+            onPress={() => router.push("/image-picker")}
+            style={[styles.addMoreBtn, { backgroundColor: colors.card }]}
+          >
+            <MaterialCommunityIcons name="image-plus" size={18} color={colors.primary} />
+            <Text style={[styles.addMoreText, { color: colors.primary }]}>Add More</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -103,20 +142,35 @@ export default function ImageToPdfScreen() {
             </Text>
             <TouchableOpacity
               style={[styles.btn, { backgroundColor: colors.primary }]}
-              onPress={() => { setDone(false); setImages([]); setPdfName("My_Document"); }}
+              onPress={() => {
+                setDone(false);
+                setImages([]);
+                setPdfName("My_Document");
+              }}
             >
               <Text style={styles.btnText}>{t.createAnother}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.btn, { backgroundColor: colors.card }]} onPress={() => router.back()}>
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: colors.card }]}
+              onPress={() => router.back()}
+            >
               <Text style={[styles.btnText, { color: colors.foreground }]}>{t.back}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
+            {/* PDF name */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.pdfName}</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.secondary,
+                    color: colors.foreground,
+                    borderColor: colors.border,
+                  },
+                ]}
                 value={pdfName}
                 onChangeText={setPdfName}
                 placeholder="File name"
@@ -124,16 +178,25 @@ export default function ImageToPdfScreen() {
               />
             </View>
 
+            {/* Page size */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={[styles.label, { color: colors.mutedForeground }]}>{t.pageSize}</Text>
               <View style={styles.pageSizeRow}>
                 {PAGE_SIZES.map((ps, i) => (
                   <TouchableOpacity
                     key={ps.label}
-                    style={[styles.pageSizeBtn, { backgroundColor: pageSize === i ? colors.primary : colors.secondary }]}
+                    style={[
+                      styles.pageSizeBtn,
+                      { backgroundColor: pageSize === i ? colors.primary : colors.secondary },
+                    ]}
                     onPress={() => setPageSize(i)}
                   >
-                    <Text style={[styles.pageSizeText, { color: pageSize === i ? "#fff" : colors.mutedForeground }]}>
+                    <Text
+                      style={[
+                        styles.pageSizeText,
+                        { color: pageSize === i ? "#fff" : colors.mutedForeground },
+                      ]}
+                    >
                       {ps.label}
                     </Text>
                   </TouchableOpacity>
@@ -141,22 +204,33 @@ export default function ImageToPdfScreen() {
               </View>
             </View>
 
+            {/* Images */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <View style={styles.imagesHeader}>
                 <Text style={[styles.label, { color: colors.mutedForeground }]}>
                   {t.images} ({images.length})
                 </Text>
-                <TouchableOpacity style={[styles.addImgBtn, { backgroundColor: colors.primary }]} onPress={pickImages}>
+                <TouchableOpacity
+                  style={[styles.addImgBtn, { backgroundColor: colors.primary }]}
+                  onPress={pickImages}
+                >
                   <MaterialCommunityIcons name="plus" size={16} color="#fff" />
                   <Text style={styles.addImgText}>{t.addImages}</Text>
                 </TouchableOpacity>
               </View>
 
               {images.length === 0 ? (
-                <TouchableOpacity style={[styles.dropZone, { borderColor: colors.border }]} onPress={pickImages}>
+                <TouchableOpacity
+                  style={[styles.dropZone, { borderColor: colors.border }]}
+                  onPress={() => router.push("/image-picker")}
+                >
                   <MaterialCommunityIcons name="image-plus" size={48} color={colors.mutedForeground} />
-                  <Text style={[styles.dropText, { color: colors.mutedForeground }]}>{t.pickFromGallery}</Text>
-                  <Text style={[styles.dropSub, { color: colors.mutedForeground }]}>{t.jpgPngSupported}</Text>
+                  <Text style={[styles.dropText, { color: colors.mutedForeground }]}>
+                    {t.pickFromGallery}
+                  </Text>
+                  <Text style={[styles.dropSub, { color: colors.mutedForeground }]}>
+                    {t.jpgPngSupported}
+                  </Text>
                 </TouchableOpacity>
               ) : (
                 <FlatList
@@ -167,7 +241,10 @@ export default function ImageToPdfScreen() {
                   renderItem={({ item, index }) => (
                     <View style={styles.imgThumbWrap}>
                       <Image source={{ uri: item }} style={styles.imgThumb} />
-                      <TouchableOpacity style={styles.removeImg} onPress={() => removeImage(index)}>
+                      <TouchableOpacity
+                        style={styles.removeImg}
+                        onPress={() => removeImage(index)}
+                      >
                         <MaterialCommunityIcons name="close-circle" size={20} color="#E53935" />
                       </TouchableOpacity>
                       <View style={[styles.imgNum, { backgroundColor: colors.primary }]}>
@@ -181,7 +258,10 @@ export default function ImageToPdfScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.convertBtn, { backgroundColor: images.length > 0 ? colors.primary : colors.secondary }]}
+              style={[
+                styles.convertBtn,
+                { backgroundColor: images.length > 0 ? colors.primary : colors.secondary },
+              ]}
               onPress={convert}
               disabled={loading || images.length === 0}
             >
@@ -203,32 +283,94 @@ export default function ImageToPdfScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 12 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+  },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 20, fontFamily: "Inter_600SemiBold" },
+  headerTitle: { flex: 1, fontSize: 20, fontFamily: "Inter_600SemiBold" },
+  addMoreBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  addMoreText: { fontSize: 12, fontFamily: "Inter_500Medium" },
   scroll: { padding: 16, gap: 16, paddingBottom: 60 },
   card: { borderRadius: 16, padding: 16, gap: 12 },
   label: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  input: { borderRadius: 10, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: "Inter_400Regular" },
+  input: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+  },
   pageSizeRow: { flexDirection: "row", gap: 10 },
   pageSizeBtn: { flex: 1, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
   pageSizeText: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  imagesHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  addImgBtn: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  imagesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  addImgBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   addImgText: { color: "#fff", fontSize: 12, fontFamily: "Inter_500Medium" },
-  dropZone: { borderWidth: 2, borderStyle: "dashed", borderRadius: 16, padding: 32, alignItems: "center", gap: 8 },
+  dropZone: {
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderRadius: 16,
+    padding: 32,
+    alignItems: "center",
+    gap: 8,
+  },
   dropText: { fontSize: 15, fontFamily: "Inter_500Medium" },
   dropSub: { fontSize: 12, fontFamily: "Inter_400Regular" },
   imgGrid: { gap: 6 },
   imgThumbWrap: { flex: 1, margin: 3, position: "relative", aspectRatio: 1 },
   imgThumb: { width: "100%", height: "100%", borderRadius: 10 },
   removeImg: { position: "absolute", top: -6, right: -6 },
-  imgNum: { position: "absolute", bottom: 4, left: 4, width: 20, height: 20, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  imgNum: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   imgNumText: { color: "#fff", fontSize: 10, fontFamily: "Inter_700Bold" },
-  convertBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", borderRadius: 16, paddingVertical: 16, gap: 10 },
+  convertBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
+    paddingVertical: 16,
+    gap: 10,
+  },
   convertBtnText: { color: "#fff", fontSize: 16, fontFamily: "Inter_600SemiBold" },
   successBox: { alignItems: "center", gap: 16, paddingTop: 40 },
-  successIcon: { width: 100, height: 100, borderRadius: 50, alignItems: "center", justifyContent: "center" },
+  successIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   successTitle: { fontSize: 22, fontFamily: "Inter_600SemiBold" },
   successSub: { fontSize: 14, fontFamily: "Inter_400Regular" },
   btn: { width: "100%", borderRadius: 16, paddingVertical: 14, alignItems: "center" },
