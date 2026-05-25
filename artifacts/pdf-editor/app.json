@@ -14,10 +14,16 @@
       "backgroundColor": "#12141f"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "icon": "./assets/images/icon.png"
     },
     "android": {
-      "backgroundColor": "#12141f"
+      "backgroundColor": "#12141f",
+      "icon": "./assets/images/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#12141f"
+      }
     },
     "web": {
       "favicon": "./assets/images/icon.png"
