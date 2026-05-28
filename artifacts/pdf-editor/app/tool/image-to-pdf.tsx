@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SetDefaultReaderModal } from "@/components/SetDefaultReaderModal";
 import { useFiles } from "@/context/FilesContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useColors } from "@/hooks/useColors";
@@ -40,6 +41,7 @@ export default function ImageToPdfScreen() {
   const [pageSize, setPageSize] = useState(0);
   const [done, setDone] = useState(false);
   const [resultSize, setResultSize] = useState("");
+  const [showDefaultModal, setShowDefaultModal] = useState(false);
 
   // Accept pre-selected images passed from the image picker
   useEffect(() => {
@@ -96,6 +98,7 @@ export default function ImageToPdfScreen() {
         color: "#E53935",
       });
       setDone(true);
+      setShowDefaultModal(true);
     } catch (e: any) {
       Alert.alert(t.error, t.pdfErrorMsg + e.message);
     } finally {
@@ -105,6 +108,7 @@ export default function ImageToPdfScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <SetDefaultReaderModal trigger={showDefaultModal} />
       <View
         style={[
           styles.header,

@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
+  FlatList,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,36 +10,48 @@ import {
   View,
 } from "react-native";
 
-import { FabActionSheet } from "@/components/FabActionSheet";
+import { FileItem } from "@/components/FileItem";
+import { SortBySheet, type SortConfig } from "@/components/SortBySheet";
+import { useFiles } from "@/context/FilesContext";
 import { useColors } from "@/hooks/useColors";
 
 const QUICK_TOOLS = [
-  { id: "image-to-pdf", icon: "file-image-outline" as const,          label: "Image to PDF", bg: "#E53935" },
-  { id: "smart-scan",   icon: "line-scan" as const,                   label: "Smart Scan",   bg: "#1565C0" },
-  { id: "pdf-reader",   icon: "folder-open-outline" as const,         label: "Import PDF",   bg: "#E65100" },
-  { id: "compress",     icon: "archive-arrow-down-outline" as const,  label: "Compress",     bg: "#B71C1C" },
-  { id: "pdf-to-jpg",   icon: "file-jpg-box" as const,               label: "PDF to JPG",   bg: "#C62828" },
-  { id: "merge-pdf",    icon: "call-merge" as const,                  label: "Merge PDF",    bg: "#E65100" },
-  { id: "add-text",     icon: "format-text" as const,                 label: "Add Text",     bg: "#0D47A1" },
-  { id: "more",         icon: "apps" as const,                        label: "More",         bg: "#4527A0" },
-];
-
-const SCAN_TYPES = [
-  { icon: "image-outline" as const,                label: "Image",       route: "image-to-pdf", color: "#1565C0" },
-  { icon: "text-box-outline" as const,             label: "Note",        route: "add-text",     color: "#00796B" },
-  { icon: "receipt" as const,                      label: "Receipt",     route: "image-to-pdf", color: "#E65100" },
-  { icon: "table" as const,                        label: "Form",        route: "image-to-pdf", color: "#6A1B9A" },
-  { icon: "card-account-details-outline" as const, label: "ID Card",     route: "image-to-pdf", color: "#00796B" },
-  { icon: "certificate" as const,                  label: "Certificate", route: "image-to-pdf", color: "#E65100" },
+  { id: "image-to-pdf", icon: "file-image-outline" as const,         label: "Image to PDF", bg: "#E53935" },
+  { id: "smart-scan",   icon: "line-scan" as const,                  label: "Smart Scan",   bg: "#1565C0" },
+  { id: "pdf-reader",   icon: "folder-open-outline" as const,        label: "Import PDF",   bg: "#E65100" },
+  { id: "compress",     icon: "archive-arrow-down-outline" as const, label: "Compress",     bg: "#B71C1C" },
+  { id: "pdf-to-jpg",   icon: "file-jpg-box" as const,              label: "PDF to JPG",   bg: "#C62828" },
+  { id: "merge-pdf",    icon: "call-merge" as const,                 label: "Merge PDF",    bg: "#E65100" },
+  { id: "add-text",     icon: "format-text" as const,               label: "Add Text",     bg: "#0D47A1" },
+  { id: "more",         icon: "apps" as const,                       label: "More",         bg: "#4527A0" },
 ];
 
 export default function HomeScreen() {
   const colors = useColors();
-  const [fabVisible, setFabVisible] = useState(false);
+  const { files } = useFiles();
+  const [selectAll, setSelectAll] = useState(false);
+  const [sortVisible, setSortVisible] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "created", order: "desc" });
+
+  const sortedFiles = useMemo(() => {
+    const sorted = [...files];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortConfig.field === "name") {
+        cmp = a.name.localeCompare(b.name);
+      } else if (sortConfig.field === "size") {
+        const toBytes = (s: string) => parseFloat(s) * (s.includes("MB") ? 1e6 : 1e3);
+        cmp = toBytes(a.size) - toBytes(b.size);
+      } else {
+        cmp = a.date.localeCompare(b.date);
+      }
+      return sortConfig.order === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [files, sortConfig]);
 
   const handleTool = (id: string) => {
     if (id === "more") { router.push("/tools"); return; }
-    if (id === "smart-scan" || id === "pdf-to-jpg") { setFabVisible(true); return; }
     router.push(`/tool/${id}` as any);
   };
 
@@ -49,78 +62,128 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Quick tool grid — 4 columns, large square icon cards */}
+        {/* ── Quick tool grid — 4 columns, circular icons ── */}
         <View style={styles.grid}>
           {QUICK_TOOLS.map((tool) => (
             <TouchableOpacity
               key={tool.id}
-              style={[styles.toolCard, { backgroundColor: colors.card }]}
+              style={styles.toolCell}
               onPress={() => handleTool(tool.id)}
               activeOpacity={0.75}
             >
-              <View style={[styles.toolIconBg, { backgroundColor: tool.bg + "22" }]}>
-                <MaterialCommunityIcons name={tool.icon} size={36} color={tool.bg} />
+              {/* Perfect circle icon */}
+              <View style={[styles.toolCircle, { backgroundColor: tool.bg + "1a" }]}>
+                <MaterialCommunityIcons name={tool.icon} size={32} color={tool.bg} />
               </View>
-              <Text style={[styles.toolLabel, { color: colors.foreground }]}>{tool.label}</Text>
+              <Text style={[styles.toolLabel, { color: colors.foreground }]} numberOfLines={2}>
+                {tool.label}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Scan type picker */}
-        <View style={[styles.scanCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.scanTitle, { color: colors.mutedForeground }]}>
-            Import images or scan with your camera{"\n"}to generate PDFs
-          </Text>
-          <View style={styles.scanGrid}>
-            {SCAN_TYPES.map((item) => (
+        {/* ── Files section ── */}
+        <View style={styles.filesSection}>
+          {/* Header row: "All (N)" + Select All + Sort */}
+          <View style={styles.filesHeader}>
+            <Text style={[styles.filesTitle, { color: colors.foreground }]}>
+              All{" "}
+              <Text style={[styles.filesCount, { color: colors.mutedForeground }]}>
+                ({files.length})
+              </Text>
+            </Text>
+            <View style={styles.filesActions}>
               <TouchableOpacity
-                key={item.label}
-                style={styles.scanItem}
-                activeOpacity={0.7}
-                onPress={() => router.push(`/tool/${item.route}` as any)}
+                onPress={() => setSelectAll((v) => !v)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <View style={[styles.scanIconWrap, { backgroundColor: item.color + "22" }]}>
-                  <MaterialCommunityIcons name={item.icon} size={32} color={item.color} />
-                </View>
-                <Text style={[styles.scanLabel, { color: colors.mutedForeground }]}>{item.label}</Text>
+                <MaterialCommunityIcons
+                  name="checkbox-multiple-outline"
+                  size={22}
+                  color={selectAll ? colors.primary : colors.foreground}
+                />
               </TouchableOpacity>
-            ))}
+              <TouchableOpacity
+                onPress={() => setSortVisible(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <MaterialCommunityIcons
+                  name="sort"
+                  size={22}
+                  color={colors.foreground}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* File list */}
+          {sortedFiles.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <MaterialCommunityIcons name="file-outline" size={48} color={colors.border} />
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                No files yet — create your first PDF!
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={sortedFiles}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <FileItem file={item} />}
+              scrollEnabled={false}
+              contentContainerStyle={{ gap: 2 }}
+            />
+          )}
         </View>
       </ScrollView>
 
-      <FabActionSheet visible={fabVisible} onClose={() => setFabVisible(false)} />
+      <SortBySheet
+        visible={sortVisible}
+        config={sortConfig}
+        onClose={() => setSortVisible(false)}
+        onApply={setSortConfig}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { paddingHorizontal: 14, paddingTop: 16, paddingBottom: 110, gap: 14 },
+  content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 110, gap: 20 },
 
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  toolCard: {
-    width: "22%",
-    flexGrow: 1,
-    borderRadius: 18,
+  // Tool grid — 4 equal columns
+  grid: { flexDirection: "row", flexWrap: "wrap" },
+  toolCell: {
+    width: "25%",
     alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 6,
-    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    gap: 8,
   },
-  toolIconBg: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
+  toolCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,       // perfect circle
     alignItems: "center",
     justifyContent: "center",
   },
-  toolLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textAlign: "center" },
+  toolLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
+    lineHeight: 15,
+  },
 
-  scanCard: { borderRadius: 20, padding: 18, alignItems: "center", gap: 18 },
-  scanTitle: { fontSize: 13, fontFamily: "Inter_400Regular", textAlign: "center", lineHeight: 20 },
-  scanGrid: { flexDirection: "row", flexWrap: "wrap", gap: 14, justifyContent: "center", width: "100%" },
-  scanItem: { alignItems: "center", gap: 8, width: "28%" },
-  scanIconWrap: { width: 64, height: 64, borderRadius: 16, alignItems: "center", justifyContent: "center" },
-  scanLabel: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center" },
+  // Files section
+  filesSection: { gap: 12 },
+  filesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  filesTitle: { fontSize: 18, fontFamily: "Inter_600SemiBold" },
+  filesCount: { fontSize: 16, fontFamily: "Inter_400Regular" },
+  filesActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+
+  emptyBox: { alignItems: "center", gap: 10, paddingVertical: 32 },
+  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
 });

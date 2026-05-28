@@ -99,14 +99,14 @@ export function FileItem({ file }: FileItemProps) {
         </View>
         <View style={styles.actions}>
           <TouchableOpacity
-            onPress={handleFavorite}
+            onPress={() => {}}
             style={styles.actionBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <MaterialCommunityIcons
-              name={file.isFavorite ? "star" : "share-outline"}
-              size={18}
-              color={file.isFavorite ? "#F59E0B" : colors.mutedForeground}
+              name="share-outline"
+              size={20}
+              color={colors.mutedForeground}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -116,7 +116,7 @@ export function FileItem({ file }: FileItemProps) {
           >
             <MaterialCommunityIcons
               name="dots-vertical"
-              size={18}
+              size={20}
               color={colors.mutedForeground}
             />
           </TouchableOpacity>
