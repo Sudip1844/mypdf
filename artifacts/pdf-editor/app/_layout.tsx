@@ -39,6 +39,7 @@ function RootLayoutNav() {
       <Stack.Screen name="tools" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="image-picker" />
+      <Stack.Screen name="search" options={{ animation: "fade" }} />
     </Stack>
   );
 }

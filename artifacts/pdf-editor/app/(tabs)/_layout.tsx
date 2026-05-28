@@ -80,9 +80,17 @@ function CustomTabBar({ state, navigation }: any) {
 function HomeHeaderRight() {
   const colors = useColors();
   return (
-    <TouchableOpacity style={{ marginRight: 16 }} onPress={() => router.push("/settings")}>
-      <MaterialCommunityIcons name="cog-outline" size={24} color={colors.foreground} />
-    </TouchableOpacity>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginRight: 16 }}>
+      <TouchableOpacity
+        onPress={() => router.push("/search")}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <MaterialCommunityIcons name="magnify" size={24} color={colors.foreground} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push("/settings")}>
+        <MaterialCommunityIcons name="cog-outline" size={24} color={colors.foreground} />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -95,8 +103,8 @@ function FilesHeaderRight() {
     {
       name: "magnify" as const,
       label: "Search",
-      onPress: () => setSearchActive((v) => !v),
-      active: searchActive,
+      onPress: () => router.push("/search"),
+      active: false,
     },
     {
       name: "checkbox-multiple-outline" as const,
