@@ -29,7 +29,6 @@ const QUICK_TOOLS = [
 export default function HomeScreen() {
   const colors = useColors();
   const { files } = useFiles();
-  const [selectAll, setSelectAll] = useState(false);
   const [sortVisible, setSortVisible] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: "created", order: "desc" });
 
@@ -94,13 +93,13 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.filesActions}>
               <TouchableOpacity
-                onPress={() => setSelectAll((v) => !v)}
+                onPress={() => router.push({ pathname: "/select", params: { source: "home" } })}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <MaterialCommunityIcons
                   name="checkbox-multiple-outline"
                   size={22}
-                  color={selectAll ? colors.primary : colors.foreground}
+                  color={colors.foreground}
                 />
               </TouchableOpacity>
               <TouchableOpacity

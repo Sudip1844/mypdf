@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -96,33 +96,13 @@ function HomeHeaderRight() {
 
 function FilesHeaderRight() {
   const colors = useColors();
-  const [searchActive, setSearchActive] = useState(false);
-  const [selectMode, setSelectMode] = useState(false);
 
-  const ICONS = [
-    {
-      name: "magnify" as const,
-      label: "Search",
-      onPress: () => router.push("/search"),
-      active: false,
-    },
-    {
-      name: "checkbox-multiple-outline" as const,
-      label: "Select",
-      onPress: () => setSelectMode((v) => !v),
-      active: selectMode,
-    },
-    {
-      name: "sort" as const,
-      label: "Sort",
-      onPress: () => {},
-    },
-    {
-      name: "cog-outline" as const,
-      label: "Settings",
-      onPress: () => router.push("/settings"),
-    },
-  ] as const;
+  const ICONS: { name: keyof typeof MaterialCommunityIcons.glyphMap; onPress: () => void }[] = [
+    { name: "magnify",                    onPress: () => router.push("/search") },
+    { name: "checkbox-multiple-outline",  onPress: () => router.push({ pathname: "/select", params: { source: "files" } }) },
+    { name: "sort",                       onPress: () => {} },
+    { name: "cog-outline",               onPress: () => router.push("/settings") },
+  ];
 
   return (
     <View style={styles.filesHeaderIcons}>
@@ -132,11 +112,7 @@ function FilesHeaderRight() {
           onPress={item.onPress}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <MaterialCommunityIcons
-            name={item.name}
-            size={22}
-            color={"active" in item && item.active ? colors.primary : colors.foreground}
-          />
+          <MaterialCommunityIcons name={item.name} size={22} color={colors.foreground} />
         </TouchableOpacity>
       ))}
     </View>

@@ -150,9 +150,12 @@ export default function SearchScreen() {
             clearButtonMode="never"
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => { setQuery(""); inputRef.current?.focus(); }}>
-              <View style={[styles.clearBtn, { backgroundColor: colors.mutedForeground }]}>
-                <Feather name="x" size={12} color={colors.card} />
+            <TouchableOpacity
+              onPress={() => { setQuery(""); inputRef.current?.focus(); }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <View style={[styles.clearBtn, { backgroundColor: "#9CA3AF" }]}>
+                <Feather name="x" size={13} color="#fff" />
               </View>
             </TouchableOpacity>
           )}
