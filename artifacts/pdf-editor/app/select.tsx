@@ -183,14 +183,14 @@ export default function SelectScreen() {
             </>
           )}
 
-          {/* Select All toggle */}
+          {/* Select All toggle — same icon, color changes */}
           <TouchableOpacity
             onPress={toggleAll}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.headerBtn}
           >
             <MaterialCommunityIcons
-              name={allSelected ? "select-all" : "checkbox-blank-outline"}
+              name="checkbox-multiple-outline"
               size={24}
               color={allSelected ? colors.primary : colors.foreground}
             />

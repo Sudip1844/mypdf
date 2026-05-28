@@ -98,10 +98,9 @@ function FilesHeaderRight() {
   const colors = useColors();
 
   const ICONS: { name: keyof typeof MaterialCommunityIcons.glyphMap; onPress: () => void }[] = [
-    { name: "magnify",                    onPress: () => router.push("/search") },
-    { name: "checkbox-multiple-outline",  onPress: () => router.push({ pathname: "/select", params: { source: "files" } }) },
-    { name: "sort",                       onPress: () => {} },
-    { name: "cog-outline",               onPress: () => router.push("/settings") },
+    { name: "magnify",                   onPress: () => router.push("/search") },
+    { name: "checkbox-multiple-outline", onPress: () => router.push({ pathname: "/select", params: { source: "files" } }) },
+    { name: "cog-outline",              onPress: () => router.push("/settings") },
   ];
 
   return (
