@@ -1,13 +1,12 @@
-import { useColorScheme } from "react-native";
-
+import { useTheme } from "@/context/ThemeContext";
 import colors from "@/constants/colors";
 
 /**
- * Returns the palette that matches the device color scheme.
- * Follows the system dark/light mode setting automatically.
+ * Returns the palette that matches the user's chosen theme (light/dark/system).
+ * Reads from ThemeContext so in-app toggling works without restarting.
  */
 export function useColors() {
-  const scheme = useColorScheme();
-  const palette = scheme === "dark" ? colors.dark : colors.light;
+  const { resolvedTheme } = useTheme();
+  const palette = resolvedTheme === "dark" ? colors.dark : colors.light;
   return { ...palette, radius: colors.radius };
 }

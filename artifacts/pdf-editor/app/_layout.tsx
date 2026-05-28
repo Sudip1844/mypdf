@@ -18,6 +18,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { FilesProvider } from "@/context/FilesContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 
 SplashScreen.preventAutoHideAsync();
@@ -66,6 +67,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <ThemeProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <LanguageProvider>
@@ -79,6 +81,7 @@ export default function RootLayout() {
           </LanguageProvider>
         </QueryClientProvider>
       </ErrorBoundary>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

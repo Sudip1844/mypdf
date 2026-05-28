@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { LANGUAGES, useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 
 interface SettingRowProps {
@@ -61,8 +62,8 @@ export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { t, lang, setLang } = useLanguage();
+  const { isDark, setPreference } = useTheme();
   const [securityQ, setSecurityQ] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
   const [langModalVisible, setLangModalVisible] = useState(false);
 
   const currentLang = LANGUAGES.find((l) => l.code === lang);
@@ -104,8 +105,8 @@ export default function SettingsScreen() {
             icon="weather-night"
             label={t.darkMode}
             toggle
-            toggleValue={darkMode}
-            onToggle={setDarkMode}
+            toggleValue={isDark}
+            onToggle={(v) => setPreference(v ? "dark" : "light")}
             isLast
           />
         </View>
