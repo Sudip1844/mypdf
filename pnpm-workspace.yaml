@@ -158,3 +158,10 @@ overrides:
   # drizzle-kit uses esbuild internally on an older version that's vulnerable, this overrides it
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
+  # Security CVE fixes — pin transitive deps to patched versions
+  # GHSA-q8mj-m7cp-5q26: qs DoS via stringify crash (fix: >=6.15.2)
+  qs: ">=6.15.2"
+  # GHSA-w5hq-g745-h8pq: uuid missing buffer bounds check (fix: >=11.1.1)
+  uuid: ">=11.1.1"
+  # GHSA-qx2v-qp2m-jg93: PostCSS XSS via unescaped </style> (fix: >=8.5.10)
+  postcss: ">=8.5.10"
