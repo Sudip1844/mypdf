@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "pdf-editor",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -47,7 +47,7 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-media-library"
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true,
